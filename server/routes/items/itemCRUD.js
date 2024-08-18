@@ -1,15 +1,14 @@
 const express = require('express');
-const Item = require('./models/item'); // Import the item model
-const User = require('./models/user'); // Import the user model
-const checkUser = require("../../middleware/checkUser");
-
+const Item = require('../../models/itemModel'); // Import the item model
+const User = require('../../models/userModel'); // Import the user model
+const checkUser = require('../../middleware/checkUser');
 const router = express.Router();
 
 // Middleware for user authentication
-router.use(checkUser);
+//router.use(checkUser);
 
 // To create new item
-router.post('/items', async (req, res) => {
+router.post('/items', checkUser, async (req, res) => {
     try {
         const { itemName, itemDescription, itemImageURL, itemPrice } = req.body;
 
@@ -34,7 +33,7 @@ router.post('/items', async (req, res) => {
 });
 
 // Get all items
-router.get('/all', async (req, res) => {
+router.get('/all', checkUser, async (req, res) => {
     try {
         const items = await Item.find().populate('itemSeller', '-password').populate('itemBuyer', '-password');
         res.status(200).json(items);
@@ -44,7 +43,7 @@ router.get('/all', async (req, res) => {
 });
 
 // Get a single item by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id).populate('itemSeller', '-password').populate('itemBuyer', '-password');
         if (!item) {
@@ -57,7 +56,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update an item by ID
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {
@@ -79,7 +78,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete an item by ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {
@@ -108,7 +107,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Mark an item as sold
-router.put('/sell/:id', async (req, res) => {
+router.put('/sell/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {
@@ -143,7 +142,7 @@ router.put('/sell/:id', async (req, res) => {
 });
 
 // Get all unsold items
-router.get('/unsold', async (req, res) => {
+router.get('/unsold', checkUser, async (req, res) => {
     try {
         const unsoldItems = await Item.find({ itemSold: false }).populate('itemSeller', '-password');
 
@@ -165,7 +164,7 @@ router.get('/unsold', async (req, res) => {
 // });
 
 // Get all items posted for sale by the logged-in user
-router.get('/for/sale', async (req, res) => {
+router.get('/for/sale', checkUser, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).populate('itemsPosted');
         
@@ -193,7 +192,7 @@ router.get('/for/sale', async (req, res) => {
 // });
 
 // Get all items purchased by the logged-in user
-router.get('/purchases', async (req, res) => {
+router.get('/purchases', checkUser, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).populate('itemsPurchased');
         
