@@ -1,8 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
-const User = require('../models/User');
+const User = require('../../models/userModel');
 const router = express.Router();
 
 //User Signup
@@ -77,3 +76,5 @@ router.get("/logout", async (req, res) => {
         return res.status(500).json({error: "Internal Server Error!"});
     }
 })
+
+module.exports = router;
