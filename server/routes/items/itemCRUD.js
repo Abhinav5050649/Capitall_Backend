@@ -4,11 +4,8 @@ const User = require('../../models/userModel'); // Import the user model
 const checkUser = require('../../middleware/checkUser');
 const router = express.Router();
 
-// Middleware for user authentication
-//router.use(checkUser);
-
-// To create new item
-router.post('/items', checkUser, async (req, res) => {
+// To create new item --> tested
+router.post('/sell', checkUser, async (req, res) => {
     try {
         const { itemName, itemDescription, itemImageURL, itemPrice } = req.body;
 
@@ -17,33 +14,33 @@ router.post('/items', checkUser, async (req, res) => {
             itemDescription,
             itemImageURL,
             itemPrice,
-            itemSeller: req.user._id, // Associate item with the logged-in user
+            itemSeller: req.user.id, // Associate item with the logged-in user
         });
 
         const savedItem = await newItem.save();
 
-        // Add the item to the user's posted items
-        req.user.itemsPosted.push(savedItem._id);
-        await req.user.save();
+        const seller = await User.findById(req.user.id);
+        seller.itemsPosted.push(savedItem._id);
+        await seller.save();
 
-        res.status(201).json(savedItem);
+        return res.status(201).json(savedItem);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        return res.status(400).json({ message: error.message });
     }
 });
 
-// Get all items
+// Get all items --> tested
 router.get('/all', checkUser, async (req, res) => {
     try {
-        const items = await Item.find().populate('itemSeller', '-password').populate('itemBuyer', '-password');
+        const items = await Item.find();
         res.status(200).json(items);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 });
 
-// Get a single item by ID
-router.get('/:id', checkUser, async (req, res) => {
+// Get a single item by ID --> tested
+router.get('/one/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id).populate('itemSeller', '-password').populate('itemBuyer', '-password');
         if (!item) {
@@ -55,8 +52,8 @@ router.get('/:id', checkUser, async (req, res) => {
     }
 });
 
-// Update an item by ID
-router.put('/:id', checkUser, async (req, res) => {
+// Update an item by ID --> tested
+router.put('/mod/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {
@@ -64,7 +61,7 @@ router.put('/:id', checkUser, async (req, res) => {
         }
 
         // Only the seller of the item can update it
-        if (item.itemSeller.toString() !== req.user._id.toString()) {
+        if (item.itemSeller.toString() !== req.user.id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to update this item' });
         }
 
@@ -77,8 +74,8 @@ router.put('/:id', checkUser, async (req, res) => {
     }
 });
 
-// Delete an item by ID
-router.delete('/:id', checkUser, async (req, res) => {
+// Delete an item by ID --> tested
+router.delete('/del/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {
@@ -90,15 +87,15 @@ router.delete('/:id', checkUser, async (req, res) => {
         }
 
         // Only the seller of the item can delete it
-        if (item.itemSeller.toString() !== req.user._id.toString()) {
+        if (item.itemSeller.toString() !== req.user.id.toString()) {
             return res.status(403).json({ message: 'You do not have permission to delete this item' });
         }
 
-        await User.findByIdAndUpdate(req.user._id, {
+        await User.findByIdAndUpdate(req.user.id, {
             $pull: { itemsPosted: item._id }
         });
 
-        await item.remove();
+        await item.deleteOne();
 
         res.status(200).json({ message: 'Item deleted successfully' });
     } catch (error) {
@@ -106,8 +103,8 @@ router.delete('/:id', checkUser, async (req, res) => {
     }
 });
 
-// Mark an item as sold
-router.put('/sell/:id', checkUser, async (req, res) => {
+// Mark an item as sold --> tested
+router.put('/sold/:id', checkUser, async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {
@@ -120,7 +117,7 @@ router.put('/sell/:id', checkUser, async (req, res) => {
         }
 
         // Ensure the seller is not the buyer
-        const buyerId = req.user._id;
+        const buyerId = req.user.id;
         if (item.itemSeller.toString() === buyerId.toString()) {
             return res.status(403).json({ message: 'Seller cannot purchase their own item' });
         }
@@ -141,7 +138,7 @@ router.put('/sell/:id', checkUser, async (req, res) => {
     }
 });
 
-// Get all unsold items
+// Get all unsold items --> tested
 router.get('/unsold', checkUser, async (req, res) => {
     try {
         const unsoldItems = await Item.find({ itemSold: false }).populate('itemSeller', '-password');
@@ -152,24 +149,17 @@ router.get('/unsold', checkUser, async (req, res) => {
     }
 });
 
-// // Get all items posted for sale by the logged-in user
-// router.get('/for/sale', async (req, res) => {
-//     try {
-//         const userItems = await Item.find({ itemSeller: req.user._id }).populate('itemSeller', '-password');
-
-//         res.status(200).json(userItems);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// });
-
-// Get all items posted for sale by the logged-in user
+// Get all items posted for sale by the logged-in user --> tested
 router.get('/for/sale', checkUser, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate('itemsPosted');
-        
+        const user = await User.findById(req.user.id)
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.itemsPosted && user.itemsPosted.length > 0) {
+            await user.populate('itemsPosted');
         }
 
         res.status(200).json(user.itemsPosted);
@@ -178,26 +168,17 @@ router.get('/for/sale', checkUser, async (req, res) => {
     }
 });
 
-
-// // Get all items purchased by the logged-in user
-// router.get('/purchases', async (req, res) => {
-//     try {
-
-//         const purchasedItems = await Item.find({ itemBuyer: req.user._id }).populate('itemSeller', '-password').populate('itemBuyer', '-password');
-
-//         res.status(200).json(purchasedItems);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// });
-
-// Get all items purchased by the logged-in user
-router.get('/purchases', checkUser, async (req, res) => {
+// Get all items purchased by the logged-in user --> tested
+router.get('/own', checkUser, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate('itemsPurchased');
-        
+        const user = await User.findById(req.user.id);
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.itemsPurchased && user.itemsPurchased.length > 0) {
+            await user.populate('itemsPurchased');
         }
 
         res.status(200).json(user.itemsPurchased);
@@ -205,5 +186,6 @@ router.get('/purchases', checkUser, async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
 
 module.exports = router;

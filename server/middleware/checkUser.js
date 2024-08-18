@@ -8,7 +8,7 @@ const checkUser = (req, res, next) => {
         if (token != null) {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = { id: decoded.id };
-            next()
+            next();
         } else {
             res.status(401);
             throw new Error("No user credentials found!");

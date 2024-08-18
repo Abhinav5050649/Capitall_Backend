@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../../models/userModel');
 const router = express.Router();
 
-//User Signup
+//User Signup --> tested
 router.post('/signup', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -33,7 +33,7 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-//User Login
+//User Login --> tested
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -72,10 +72,10 @@ router.post('/login', async (req, res) => {
     }
 });
 
-//User Logout
+//User Logout --> tested
 router.get("/logout", async (req, res) => {
     try {
-        req.cookie("token", "", {
+        res.cookie("token", "", {
             httpOnly: true,
             secure: true,
             sameSite: 'Strict',
