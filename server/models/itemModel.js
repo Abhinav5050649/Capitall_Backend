@@ -11,7 +11,7 @@ const itemSchema = new Schema({
         required: true
     },
     itemImageURL: [{
-        type: URL,
+        type: String,
     }],
     itemPrice: {
         type: Number,
@@ -33,5 +33,5 @@ const itemSchema = new Schema({
     }
 });
 
-const Item = mongoose.model('item', userSchema);
+const Item = mongoose.model('item', itemSchema);
 module.exports = Item;
