@@ -55,9 +55,15 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
             expiresIn: '1d',
         });
-        const response = res.cookie("token", token, {httpOnly: true});
-        response.status(200).json({ message: "User logged in!"});
-
+        const response =
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+        
+        response.status(200).json({ message: "User logged in!" });
         return response;
     
     } catch (error) {
@@ -69,7 +75,12 @@ router.post('/login', async (req, res) => {
 //User Logout
 router.get("/logout", async (req, res) => {
     try {
-        req.cookie.set("token", "");
+        req.cookie("token", "", {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge: 0 
+        });
         return res.status(200).json({message: "User logged out!"});
     } catch (error) {
         console.error(error);

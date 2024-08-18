@@ -4,11 +4,11 @@ require('dotenv').config();
 
 const checkUser = (req, res, next) => {
     try {
-        const token = req.cookie.token; 
-        if (token) {
+        const token = req.cookies["token"]; 
+        if (token != null) {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user.id = decoded.id
-            next();
+            req.user = { id: decoded.id };
+            next()
         } else {
             res.status(401);
             throw new Error("No user credentials found!");
