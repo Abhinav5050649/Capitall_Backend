@@ -141,7 +141,7 @@ router.put('/sold/:id', checkUser, async (req, res) => {
 // Get all unsold items --> tested
 router.get('/unsold', checkUser, async (req, res) => {
     try {
-        const unsoldItems = await Item.find({ itemSold: false }).populate('itemSeller', '-password');
+        const unsoldItems = (await Item.find({ itemSold: false, itemSeller: { $ne: req.user.id } }).populate('itemSeller', '-password'));
 
         res.status(200).json(unsoldItems);
     } catch (error) {
