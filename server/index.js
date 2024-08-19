@@ -9,7 +9,9 @@ const cookieParser = require("cookie-parser");
 connectToMongo();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors(
+    "http://localhost:3000/"
+));
 app.use(cookieParser());
 
 app.use("/api/auth", require("./routes/auth/userAuth"));
