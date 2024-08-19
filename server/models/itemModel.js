@@ -10,9 +10,10 @@ const itemSchema = new Schema({
         type: String,
         required: true
     },
-    itemImageURL: [{
+    itemImageURL: {
         type: String,
-    }],
+        required: true
+    },
     itemPrice: {
         type: Number,
         required: true,
